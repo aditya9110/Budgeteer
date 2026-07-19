@@ -93,6 +93,7 @@ function init() {
     setupModals();
     setupTransactionForm();
     setupSettings();
+    setupDatePicker(); 
 }
 
 // ── CUSTOM DROPDOWN LOGIC ────────────────────────────────────────────────────
@@ -128,6 +129,7 @@ function buildDropdown(dropdown, optionsList, items, onSelect) {
 
 function closeAllDropdowns() {
     document.querySelectorAll(".custom-select.open").forEach(d => d.classList.remove("open"));
+    document.querySelectorAll(".date-picker.open").forEach(d => d.classList.remove("open"));
 }
 
 // Close dropdowns when clicking outside
@@ -763,6 +765,96 @@ function setupTransactionForm() {
     btnAddTx.addEventListener("click", () => openTxModal(null));
     txModalCancel.addEventListener("click", () => txModalOverlay.classList.add("hidden"));
     txModalSave.addEventListener("click", saveTx);
+}
+
+let datePickerViewDate = new Date();
+
+function setupDatePicker() {
+    const input   = document.getElementById("tx-date");
+    const wrapper = document.getElementById("tx-date-picker");
+
+    input.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const isOpen = wrapper.classList.contains("open");
+        closeAllDropdowns();
+        if (!isOpen) {
+            datePickerViewDate = parseDMY(input.value) || getSelectedPeriodDate();
+            renderCalendar();
+            wrapper.classList.add("open");
+        }
+    });
+}
+
+function parseDMY(str) {
+    const m = str && str.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+    return m ? new Date(parseInt(m[3]), parseInt(m[2]) - 1, parseInt(m[1])) : null;
+}
+
+function formatDMY(date) {
+    const d = String(date.getDate()).padStart(2, "0");
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    return `${d}-${m}-${date.getFullYear()}`;
+}
+
+function getSelectedPeriodDate() {
+    const monthIndex = MONTHS.indexOf(currentMonth);
+    const year = parseInt(currentYear);
+    if (monthIndex >= 0 && !isNaN(year)) {
+        return new Date(year, monthIndex, 1);
+    }
+    // fallback if no period loaded yet
+    return new Date();
+}
+
+function renderCalendar() {
+    const calendar = document.getElementById("tx-date-calendar");
+    const year  = datePickerViewDate.getFullYear();
+    const month = datePickerViewDate.getMonth();
+    const selected = parseDMY(document.getElementById("tx-date").value);
+    const today = new Date();
+
+    const startOffset  = new Date(year, month, 1).getDay();
+    const daysInMonth  = new Date(year, month + 1, 0).getDate();
+
+    let cells = "";
+    for (let i = 0; i < startOffset; i++) cells += `<div class="cal-cell empty"></div>`;
+    for (let d = 1; d <= daysInMonth; d++) {
+        const isSelected = selected && selected.getDate() === d && selected.getMonth() === month && selected.getFullYear() === year;
+        const isToday = today.getDate() === d && today.getMonth() === month && today.getFullYear() === year;
+        cells += `<div class="cal-cell${isSelected ? " selected" : ""}${isToday ? " today" : ""}" data-day="${d}">${d}</div>`;
+    }
+
+    calendar.innerHTML = `
+        <div class="cal-header">
+            <button type="button" class="cal-nav" id="cal-prev">‹</button>
+            <span class="cal-title">${MONTHS[month]} ${year}</span>
+            <button type="button" class="cal-nav" id="cal-next">›</button>
+        </div>
+        <div class="cal-weekdays">${["S","M","T","W","T","F","S"].map(d => `<div>${d}</div>`).join("")}</div>
+        <div class="cal-grid">${cells}</div>
+    `;
+
+    calendar.querySelector("#cal-prev").addEventListener("click", (e) => {
+        e.stopPropagation();
+        datePickerViewDate = new Date(year, month - 1, 1);
+        renderCalendar();
+    });
+    calendar.querySelector("#cal-next").addEventListener("click", (e) => {
+        e.stopPropagation();
+        datePickerViewDate = new Date(year, month + 1, 1);
+        renderCalendar();
+    });
+    calendar.querySelectorAll(".cal-cell:not(.empty)").forEach(cell => {
+        cell.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const picked = new Date(year, month, parseInt(cell.dataset.day));
+            const input  = document.getElementById("tx-date");
+            input.value = formatDMY(picked);
+            input.classList.remove("invalid");
+            document.getElementById("err-date").textContent = "";
+            document.getElementById("tx-date-picker").classList.remove("open");
+        });
+    });
 }
 
 async function openTxModal(row) {

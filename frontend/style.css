@@ -773,6 +773,80 @@ thead th { position: relative; }
 
 .form-input:focus { border-color: var(--purple); }
 
+/* ── DATE PICKER ──────────────────────────────── */
+.date-picker { position: relative; width: 100%; }
+.date-picker input { cursor: pointer; width: 100%; }
+
+.date-picker-calendar {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    z-index: 300;
+    width: 240px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-hover);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+
+.date-picker.open .date-picker-calendar { display: block; }
+
+.cal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.cal-title {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.cal-nav {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 16px;
+    cursor: pointer;
+    padding: 2px 8px;
+    border-radius: 4px;
+    transition: all 0.15s;
+}
+.cal-nav:hover { background: var(--purple-dim); color: var(--purple-light); }
+
+.cal-weekdays, .cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    text-align: center;
+}
+
+.cal-weekdays div {
+    font-size: 10px;
+    color: var(--text-muted);
+    font-weight: 700;
+    padding: 4px 0;
+}
+
+.cal-cell {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-secondary);
+    padding: 6px 0;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.cal-cell:hover:not(.empty) { background: var(--bg-hover); color: var(--text-primary); }
+.cal-cell.selected { background: var(--purple); color: white; }
+.cal-cell.today:not(.selected) { color: var(--purple-light); font-weight: 700; }
+.cal-cell.empty { cursor: default; }
+
 /* ── SCROLLBAR ────────────────────────────────── */
 ::-webkit-scrollbar       { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }

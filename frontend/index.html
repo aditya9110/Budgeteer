@@ -256,7 +256,10 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>Date</label>
-                        <input type="text" id="tx-date" placeholder="DD-MM-YYYY" class="form-input" />
+                        <div class="date-picker" id="tx-date-picker">
+                            <input type="text" id="tx-date" placeholder="DD-MM-YYYY" class="form-input" readonly />
+                            <div class="date-picker-calendar" id="tx-date-calendar"></div>
+                        </div>
                         <span class="form-error" id="err-date"></span>
                     </div>
                     <div class="form-group">
