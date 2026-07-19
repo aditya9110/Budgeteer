@@ -341,6 +341,14 @@ class Api:
             return {"ok": True, "data": None}
         except Exception as e:
             return {"ok": False, "error": str(e)}
+    
+
+    def reorder_categories(self, ordered_ids):
+        try:
+            db.reorder_categories(ordered_ids)
+            return {"ok": True, "data": None}
+        except Exception as e:
+            return {"ok": False, "error": str(e)}
 
 
     # ─────────────────────────────────────────────

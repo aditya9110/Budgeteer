@@ -1011,14 +1011,14 @@ function renderCategoriesTable(rows) {
         <th>Name</th>
         <th>Keywords <span style="font-weight:400;text-transform:none;letter-spacing:0">(comma separated)</span></th>
         <th>Group</th>
-        <th style="width:80px"></th>
+        <th style="width:132px"></th>
     </tr></thead>`;
 
-    const bodyRows = rows.map(row => buildCategoryRow(row, false)).join("");
+    const bodyRows = rows.map((row, i) => buildCategoryRow(row, false, i, rows.length)).join("");
     el.innerHTML = `<table>${headers}<tbody>${bodyRows}</tbody></table>`;
 }
 
-function buildCategoryRow(row, isEditing) {
+function buildCategoryRow(row, isEditing, index = 0, total = 1) {
     const groupOptions = GROUPS.map(g =>
         `<option value="${g}" ${row.grp === g ? "selected" : ""}>${g}</option>`
     ).join("");
@@ -1040,7 +1040,7 @@ function buildCategoryRow(row, isEditing) {
             </td>
             <td class="actions">
                 <button class="btn-save-row" onclick="saveCategoryRow(this)">✓</button>
-                <button class="btn-delete"   onclick="deleteCategoryRow(this)">✕</button>
+                <button class="btn-delete"   onclick="cancelCategoryRow(this)">✕</button>
             </td>
         </tr>`;
     } else {
@@ -1048,7 +1048,9 @@ function buildCategoryRow(row, isEditing) {
             <td style="color:var(--text-primary);font-family:var(--font-mono);font-size:12px;padding:10px 12px;">${row.name}</td>
             <td style="color:var(--text-secondary);font-family:var(--font-mono);font-size:12px;padding:10px 12px;">${row.keywords || '—'}</td>
             <td style="color:var(--purple-light);font-family:var(--font-mono);font-size:12px;padding:10px 12px;">${row.grp || 'None'}</td>
-            <td class="actions">
+            <td class="actions actions-wide">
+                <button class="btn-move" ${index === 0 ? "disabled" : ""} onclick="moveCategoryRow(this,'up')">▲</button>
+                <button class="btn-move" ${index === total - 1 ? "disabled" : ""} onclick="moveCategoryRow(this,'down')">▼</button>
                 <button class="btn-edit"   onclick="editCategoryRow(this)">✎</button>
                 <button class="btn-delete" onclick="deleteCategoryRow(this)">✕</button>
             </td>
@@ -1068,6 +1070,17 @@ function editCategoryRow(btn) {
     };
     tr.outerHTML = buildCategoryRow(row, true);
     setupGroupDropdowns();
+}
+
+function cancelCategoryRow(btn) {
+    const tr = btn.closest("tr");
+    const id = tr.dataset.id;
+
+    // Unsaved new row (from "+ Add") — discard by just removing it from the DOM
+    if (!id) { tr.remove(); return; }
+
+    // Existing row being edited — discard changes, re-fetch from DB to restore original values
+    loadCategoriesSettings();
 }
 
 async function saveCategoryRow(btn) {
@@ -1108,6 +1121,31 @@ async function deleteCategoryRow(btn) {
     });
 }
 
+async function moveCategoryRow(btn, direction) {
+    const tr = btn.closest("tr");
+    const sibling = direction === "up" ? tr.previousElementSibling : tr.nextElementSibling;
+    if (!sibling) return;
+
+    const tbody = tr.parentElement;
+    if (direction === "up") {
+        tbody.insertBefore(tr, sibling);
+    } else {
+        tbody.insertBefore(sibling, tr);
+    }
+
+    const orderedIds = Array.from(tbody.querySelectorAll("tr"))
+        .map(row => row.dataset.id)
+        .filter(id => id); // skip unsaved new rows without an id
+
+    const result = await callPython("reorder_categories", orderedIds);
+    if (result.ok) {
+        loadCategoriesSettings(); // re-render so ▲/▼ disabled states refresh at the new boundaries
+    } else {
+        showToast(result.error, "error");
+        loadCategoriesSettings(); // revert to server truth
+    }
+}
+
 function addCategoryRow() {
     const el = document.getElementById("categories-table");
 
@@ -1118,7 +1156,7 @@ function addCategoryRow() {
                 <th>Name</th>
                 <th>Keywords <span style="font-weight:400;text-transform:none;letter-spacing:0">(comma separated)</span></th>
                 <th>Group</th>
-                <th style="width:80px"></th>
+                <th style="width:132px"></th>
             </tr></thead>
             <tbody></tbody>
         </table>`;
@@ -1162,7 +1200,7 @@ function buildSourceRow(row, isEditing) {
             <td><input class="settings-input" data-field="name" value="${row.name || ''}" /></td>
             <td class="actions">
                 <button class="btn-save-row" onclick="saveSourceRow(this)">✓</button>
-                <button class="btn-delete"   onclick="deleteSourceRow(this)">✕</button>
+                <button class="btn-delete"   onclick="cancelSourceRow(this)">✕</button>
             </td>
         </tr>`;
     } else {
@@ -1181,6 +1219,17 @@ function editSourceRow(btn) {
     const id   = tr.dataset.id;
     const name = tr.querySelector("td").textContent.trim();
     tr.outerHTML = buildSourceRow({ id, name }, true);
+}
+
+function cancelSourceRow(btn) {
+    const tr = btn.closest("tr");
+    const id = tr.dataset.id;
+
+    // Unsaved new row — discard by removing it from the DOM
+    if (!id) { tr.remove(); return; }
+
+    // Existing row being edited — discard changes, re-fetch from DB to restore original value
+    loadSourcesSettings();
 }
 
 async function saveSourceRow(btn) {

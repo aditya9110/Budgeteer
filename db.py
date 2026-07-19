@@ -49,6 +49,15 @@ def init_db():
         )
     """)
 
+    # Migration: add sort_order column for classification-priority ranking
+    cursor.execute("PRAGMA table_info(categories)")
+    existing_cols = [row[1] for row in cursor.fetchall()]
+    if "sort_order" not in existing_cols:
+        cursor.execute("ALTER TABLE categories ADD COLUMN sort_order INTEGER")
+        cursor.execute("SELECT id FROM categories ORDER BY name ASC")
+        for i, row in enumerate(cursor.fetchall()):
+            cursor.execute("UPDATE categories SET sort_order=? WHERE id=?", (i, row[0]))
+
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS sources (
             id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -240,7 +249,7 @@ def get_imported_months():
 def get_categories_settings():
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM categories ORDER BY name ASC")
+    cursor.execute("SELECT * FROM categories ORDER BY sort_order ASC, id ASC")
     rows = [dict(row) for row in cursor.fetchall()]
     conn.close()
     return rows
@@ -249,9 +258,11 @@ def get_categories_settings():
 def add_category(name, keywords, grp):
     conn = get_connection()
     cursor = conn.cursor()
+    cursor.execute("SELECT COALESCE(MAX(sort_order), -1) + 1 FROM categories")
+    next_order = cursor.fetchone()[0]
     cursor.execute(
-        "INSERT INTO categories (name, keywords, grp) VALUES (?, ?, ?)",
-        (name, keywords, grp)
+        "INSERT INTO categories (name, keywords, grp, sort_order) VALUES (?, ?, ?, ?)",
+        (name, keywords, grp, next_order)
     )
     conn.commit()
     conn.close()
@@ -272,6 +283,15 @@ def delete_category(cat_id):
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("DELETE FROM categories WHERE id=?", (cat_id,))
+    conn.commit()
+    conn.close()
+
+
+def reorder_categories(ordered_ids):
+    conn = get_connection()
+    cursor = conn.cursor()
+    for i, cat_id in enumerate(ordered_ids):
+        cursor.execute("UPDATE categories SET sort_order=? WHERE id=?", (i, int(cat_id)))
     conn.commit()
     conn.close()
 

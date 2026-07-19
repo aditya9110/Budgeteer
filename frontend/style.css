@@ -623,6 +623,22 @@ thead th { position: relative; }
 .btn-delete { color: var(--text-muted); }
 .btn-delete:hover { color: var(--red); background: rgba(231,76,60,0.1); }
 
+.actions-wide { width: 132px; }
+
+.btn-move {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 10px;
+    padding: 3px 5px;
+    border-radius: 4px;
+    color: var(--text-muted);
+    transition: all 0.15s;
+}
+
+.btn-move:hover:not(:disabled) { color: var(--purple-light); background: var(--purple-dim); }
+.btn-move:disabled { opacity: 0.25; cursor: default; }
+
 /* ── TOAST ────────────────────────────────────── */
 .toast {
     position: fixed;
