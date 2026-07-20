@@ -283,6 +283,21 @@ body { display: flex; }
 .empty-title { font-size: 15px; font-weight: 600; color: var(--text-secondary); }
 .empty-sub   { font-size: 12px; color: var(--text-muted); }
 
+
+/* ── PERIOD ROW ──────────────────────────────────── */
+.loaded-period {
+    padding-bottom: 14px;
+    margin-bottom: 4px;
+}
+
+.loaded-period-value {
+    font-family: var(--font-mono);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--purple-light);
+    letter-spacing: 0.02em;
+}
+
 /* ── KPI ROW ──────────────────────────────────── */
 .kpi-row {
     display: grid;

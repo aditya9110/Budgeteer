@@ -248,6 +248,7 @@ async function loadDashboard(year, month) {
         // Show content, hide empty state
         document.getElementById("dashboard-empty").classList.add("hidden");
         document.getElementById("dashboard-content").classList.remove("hidden");
+        document.getElementById("dashboard-loaded-period").innerHTML = `<span class="loaded-period-value">${month} ${year}</span>`;
 
         renderKPIs(transactions, categories, budget_status);
         renderTopTransactions(top_transactions);
@@ -624,6 +625,7 @@ async function loadTransactions(year, month) {
 
     document.getElementById("transactions-empty").classList.add("hidden");
     document.getElementById("transactions-content").classList.remove("hidden");
+    document.getElementById("transactions-loaded-period").innerHTML = `<span class="loaded-period-value">${month} ${year}</span>`;
 
     renderTransactionsTable();
 }
